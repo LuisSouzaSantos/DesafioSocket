@@ -30,7 +30,7 @@ public class Start {
 	}
 	
 	public static void createConnection(Socket clientConnected) {
-		
+		String clientName =  clientConnected.getRemoteSocketAddress().toString();
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -40,14 +40,11 @@ public class Start {
 					outputStream.write(Response.CONNECTED.getMessage().getBytes());
 					outputStream.flush();
 					while(clientConnected.isConnected()) {
-						outputStream.write(Response.WAITING_DATA.getMessage().getBytes());
-				        outputStream.flush();
-				        Thread.sleep(5000);
 					}
-				} catch (IOException | InterruptedException e) { e.printStackTrace(); }
+				} catch (IOException e) { e.printStackTrace(); }
 				
 			}
-		}).start();
+		},"OutputStream Thread"+clientName).start();
 		
 		new Thread(new Runnable() {
 			@Override
@@ -62,7 +59,8 @@ public class Start {
 								String message = "";
 								while(true) {
 									try {
-										int bytesRead = in.read(messageByte);
+										int bytesRead = inputStream.read(messageByte);
+										//int bytesRead = in.read(messageByte);
 										message+=new String(messageByte, 0, bytesRead);
 										
 										if(message == Resquest.PRINT.getMessage()) { System.out.println("Imprimindo");}
@@ -72,15 +70,17 @@ public class Start {
 											 clientConnected.close();
 										}
 										break;
-									} catch (IOException e) {}
+									} catch (IOException e) {
+										break;
+									}
 								}
-								System.err.println("MENSAGEM: "+message);
+								System.err.println("CLIENTE: "+Thread.currentThread().getName()+" MENSAGEM: "+message);
 							}
 						}catch(IOException e) {}
 					}
 				} catch (IOException e) { e.printStackTrace(); }
 			}
-		}).start();
+		}, "InputStream Thread"+clientName).start();
 	}
 	
 	
